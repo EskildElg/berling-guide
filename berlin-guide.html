@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Berlin · Guide</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{--bg:#0d0d0d;--surf:#141414;--surf2:#1c1c1c;--b:#2a2a2a;--t:#F7F4EF;--m:#777;--a:#1E3EFF;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--t);font-family:system-ui,sans-serif;}
+body{display:flex;flex-direction:column;}
+#hdr{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--b);background:var(--bg);z-index:1000;}
+.logo{font-family:monospace;font-size:12px;font-weight:700;letter-spacing:.08em;color:#1E3EFF;}
+.logo span{color:var(--m);}
+.hbtns{display:flex;gap:8px;}
+.hbtn{font-family:monospace;font-size:10px;background:var(--surf2);border:1px solid var(--b);color:var(--t);padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.hbtn.ok{border-color:#1E3EFF;color:#1E3EFF;}
+#fbar{flex-shrink:0;display:flex;gap:6px;padding:7px 12px;overflow-x:auto;border-bottom:1px solid var(--b);background:var(--bg);z-index:1000;scrollbar-width:none;}
+#fbar::-webkit-scrollbar{display:none;}
+.fb{flex-shrink:0;white-space:nowrap;font-family:monospace;font-size:9px;background:var(--surf);border:1px solid var(--b);color:var(--m);padding:4px 9px;cursor:pointer;display:flex;align-items:center;gap:5px;}
+.fb .dot{width:6px;height:6px;border-radius:50%;}
+.fb.on{color:var(--F7F4EF);border-color:#1E3EFF;background:var(--surf2);}
+#main{flex:1;display:flex;overflow:hidden;min-height:0;}
+#map{flex:1;}
+.leaflet-container{background:#0d1117 !important;}
+.leaflet-control-zoom a{background:var(--surf2)!important;color:var(--t)!important;border-color:var(--b)!important;}
+.leaflet-control-attribution{background:rgba(14,14,14,.8)!important;color:var(--m)!important;font-size:8px;}
+.leaflet-control-attribution a{color:var(--m)!important;}
+.leaflet-popup-content-wrapper{background:var(--surf);border:1px solid var(--b);border-top:3px solid #1E3EFF;border-radius:0;box-shadow:0 8px 32px rgba(0,0,0,.8);padding:0;}
+.leaflet-popup-content{margin:0;width:250px!important;color:var(--t);}
+.leaflet-popup-tip{background:var(--surf);}
+.leaflet-popup-close-button{color:var(--m)!important;font-size:18px!important;padding:6px 10px!important;top:4px!important;right:4px!important;}
+.pi{border-bottom:1px solid var(--b);}
+.pop-inner{padding:13px 14px 12px;}
+.pop-cat{font-family:monospace;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;}
+.pop-name{font-size:14px;font-weight:600;color:var(--t);margin-bottom:3px;}
+.pop-addr{font-size:10px;color:var(--m);margin-bottom:5px;}
+.pop-meta{font-family:monospace;font-size:9px;color:#1E3EFF;margin-bottom:6px;}
+.pop-note{font-size:10px;color:#bbb;font-style:italic;line-height:1.45;margin-bottom:9px;}
+.pop-links{display:flex;gap:7px;flex-wrap:wrap;}
+.pop-links a{font-family:monospace;font-size:8px;color:#1E3EFF;text-decoration:none;border:1px solid rgba(30,62,255,.3);padding:3px 7px;}
+.mk{display:flex;flex-direction:column;align-items:center;cursor:pointer;}
+.mk-b{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid rgba(255,255,255,.15);box-shadow:0 2px 8px rgba(0,0,0,.7);}
+.mk.sel .mk-b{box-shadow:0 0 0 3px #c8ff00,0 2px 10px rgba(0,0,0,.8);}
+.mk-tip{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;margin-top:-1px;}
+#sb{width:290px;flex-shrink:0;background:var(--surf);border-left:1px solid var(--b);display:flex;flex-direction:column;overflow:hidden;}
+.sbh{flex-shrink:0;padding:11px 13px 9px;border-bottom:1px solid var(--b);}
+.sbh h2{font-family:monospace;font-size:9px;font-weight:400;color:var(--m);text-transform:uppercase;letter-spacing:.12em;}
+.sbn{font-family:monospace;font-size:20px;font-weight:700;margin-top:1px;}
+.sbl{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--b) transparent;}
+.pi{display:flex;gap:8px;padding:10px 13px;border-bottom:1px solid var(--b);cursor:pointer;}
+.pi:hover{background:var(--surf2);}
+.pi.sel{background:rgba(30,62,255,.06);border-left:2px solid #1E3EFF;padding-left:11px;}
+.pi-bar{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:34px;}
+.pi-body{flex:1;min-width:0;}
+.pi-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pi-cat{font-family:monospace;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;margin-top:2px;}
+.pi-addr{font-size:10px;color:var(--m);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pi-note{font-size:10px;color:#aaa;font-style:italic;margin-top:3px;line-height:1.4;}
+.pi-links{display:flex;gap:7px;margin-top:5px;flex-wrap:wrap;}
+.pi-links a{font-family:monospace;font-size:8px;color:#1E3EFF;text-decoration:none;border:1px solid rgba(30,62,255,.3);padding:2px 7px;}
+.pi-dist{font-family:monospace;font-size:10px;color:#1E3EFF;flex-shrink:0;margin-top:1px;}
+.pi-dist.big{font-size:11px;font-weight:700;}
+@media(max-width:660px){#sb{display:none;width:100%;border-left:none;border-top:1px solid var(--b);}#sb.open{display:flex;position:fixed;bottom:0;left:0;right:0;height:54vh;z-index:2000;}#tog{display:flex!important;}}
+#tog{display:none;position:fixed;bottom:16px;right:12px;z-index:2001;background:#1E3EFF;color:#F7F4EF;border:none;font-family:monospace;font-size:10px;font-weight:700;padding:10px 15px;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.5);}
+</style>
+</head>
+<body>
+<div id="hdr">
+  <div class="logo">BERLIN <span>/ guide</span></div>
+  <div class="hbtns">
+    <button class="hbtn" id="nearbyBtn" onclick="toggleNearby()">📍 Nærmeste</button>
+    <button class="hbtn" id="locBtn" onclick="locateMe()">◎ Finn meg</button>
+  </div>
+</div>
+<div id="fbar"></div>
+<div id="main">
+  <div id="map"></div>
+  <div id="sb">
+    <div class="sbh"><h2>Steder</h2><div class="sbn" id="sbn">—</div></div>
+    <div class="sbl" id="sbl"></div>
+  </div>
+</div>
+<button id="tog" onclick="toggleSb()">☰ Liste</button>
+<script>
+var CATS={
+  kaffe:  {label:'Kaffe',       color:'#C9A87C', emoji:'☕'},  // sand
+  bakeri: {label:'Bakeri',      color:'#E8C4A0', emoji:'🥐'},  // lys sand
+  brunch: {label:'Brunch',      color:'#7CDFC4', emoji:'🍳'},  // mint
+  burger: {label:'Burger',      color:'#D4607A', emoji:'🍔'},  // rosa
+  sykkel: {label:'Sykkel',      color:'#1E3EFF', emoji:'🚲'},  // kongeblå
+  løping: {label:'Løping',      color:'#7CDFC4', emoji:'🏃'},  // mint
+  rute:   {label:'Løperunde',   color:'#1E3EFF', emoji:'🗺'},  // kongeblå
+  design: {label:'Design',      color:'#D4607A', emoji:'✦'},   // rosa
+  bar:    {label:'Bar & Drink', color:'#2B4674', emoji:'🍸'},  // marineblå
+  kneipe: {label:'Kneipe',      color:'#2B4674', emoji:'🍺'},  // marineblå
+  club:   {label:'Club & Natt', color:'#0d0d0d', emoji:'◉'},   // svart
+};
+var P=[
+{id:1,cat:'kaffe',name:'Kajumi',addr:'Dunckerstr. 73, P-Berg',lat:52.5442,lng:13.4219,note:'Roastery-kafé med fantastisk cappuccino. En av Berlins aller beste.',url:'https://www.instagram.com/kajumicafe/',ig:'https://www.instagram.com/kajumicafe/'},
+{id:2,cat:'kaffe',name:'Pursuit of Coffee',addr:'Pappelallee 36, P-Berg',lat:52.5467,lng:13.4186,note:'Varmt og innbydende. Hjemmelaget kake og solid espresso.',url:'https://www.instagram.com/pursuitofcoffee.berlin/',ig:'https://www.instagram.com/pursuitofcoffee.berlin/'},
+{id:3,cat:'kaffe',name:'Town Mouse Coffee',addr:'Marienburger Str. 5, P-Berg',lat:52.5350,lng:13.4235,note:'Nabolagskafé med høy score. God musikk og elite-bakverk.',url:'https://www.instagram.com/townmouse_coffee/',ig:'https://www.instagram.com/townmouse_coffee/'},
+{id:4,cat:'kaffe',name:'Symple Coffee',addr:'Sredzkistr. 45, P-Berg',lat:52.5384,lng:13.4191,note:'Kunnskapsrike barister og imponerende varm atmosfære. Kjøp bønner med hjem.',url:'https://www.symplecoffee.com/',ig:'https://www.instagram.com/symple.coffee/'},
+{id:5,cat:'kaffe',name:'Espressomania',addr:'Kastanienallee 45, Mitte',lat:52.5346,lng:13.4054,note:'Italiensk roasteri. Høyest rating i området. Prøv pastrami-sandwichen.',url:'https://www.instagram.com/espressomania.berlin/',ig:'https://www.instagram.com/espressomania.berlin/'},
+{id:6,cat:'kaffe',name:'Leuchtstoff',addr:'Siegfriedstr. 18, Neukölln',lat:52.4682,lng:13.4328,note:'Radikal chic nabolagskafé. Publiserer åpent kostnader og lønninger. Ingen laptops.',url:'https://leuchtstoff.coffee/',ig:'https://www.instagram.com/leuchtstoff.kaffee/'},
+{id:7,cat:'kaffe',name:'Voo Store (kaffe)',addr:'Oranienstr. 24, Kreuzberg',lat:52.5012,lng:13.4213,note:'Nydelig indregård og fantastisk kaffe. Kombiner gjerne med shopping.',url:'https://vooberlin.com/',ig:'https://www.instagram.com/vooberlin/'},
+{id:33,cat:'kaffe',name:'Mein Haus am See',addr:'Brunnenstr. 197-198, Mitte',lat:52.5299,lng:13.4008,note:'Kafé på dagtid, bar og DJ om natten. Åpent til 06:00 alle dager. Cult-spot.',url:'https://www.meinhaus.de/',ig:'https://www.instagram.com/meinhaus.amsee/'},
+{id:34,cat:'bakeri',name:'SOFI',addr:'Sophienstr. 21, Mitte',lat:52.5262,lng:13.4009,note:'Berlins hippeste bakeri i nydelig gårdsplass. Twice-baked croissants. Alltid kø - kom tidlig.',url:'https://sofiberlin.com/',ig:'https://www.instagram.com/sofiberlin/'},
+{id:35,cat:'bakeri',name:'ACID Mitte',addr:'Rosenthaler Str. 9, Mitte',lat:52.5279,lng:13.4025,note:'Rå urban estetikk av Plantea Estudio - rustfritt stål og Frama-møbler. Cardamom bun er must.',url:'https://www.instagram.com/acid.berlin/',ig:'https://www.instagram.com/acid.berlin/'},
+{id:42,cat:'bakeri',name:'ACID P-Berg',addr:'Sredzkistr. 14, P-Berg',lat:52.5381,lng:13.4145,note:'Samme ACID-konsept i P-Berg. God morgenkaffe rundt hjørnet fra Symple.',url:'https://www.instagram.com/acid.berlin/',ig:'https://www.instagram.com/acid.berlin/'},
+{id:36,cat:'bakeri',name:'Gorilla Bäckerei',addr:'Hermannstr. 211, Neukölln',lat:52.4778,lng:13.4265,note:'Åpent kjøkken du ser rett inn i. Sourdough, pistachio-croissant og Roman pizza.',url:'https://gorilla-baeckerei.de/',ig:'https://www.instagram.com/gorilla_baeckerei/'},
+{id:37,cat:'bakeri',name:'Zeit für Brot',addr:'Alte Schönhauser Str. 4, Mitte',lat:52.5280,lng:13.4086,note:'Berlins mest kjente bakerikjede. Zimtschnecke i absurd størrelse.',url:'https://www.zeitfuerbrot.com/',ig:'https://www.instagram.com/zeitfuerbrot/'},
+{id:38,cat:'bakeri',name:'Albatross Bakery',addr:'Graefestr. 66/67, Kreuzberg',lat:52.4914,lng:13.4167,note:'Mange kaller det Berlins beste. Queen A-croissant med karamell og havsalt.',url:'https://albatrossberlin.com/',ig:'https://www.instagram.com/albatross_bakery/'},
+{id:43,cat:'brunch',name:'Distrikt Coffee',addr:'Bergstr. 68, Mitte',lat:52.5316,lng:13.3901,note:'Industrial-chic med teglvegg og planter. Beste brunch i Mitte - spicy ragu på sourdough er ikonisk.',url:'https://distriktcoffee.de/',ig:'https://www.instagram.com/distriktcoffee/'},
+{id:44,cat:'brunch',name:'Father Carpenter',addr:'Münzstr. 21, Mitte',lat:52.5251,lng:13.4083,note:'Pioner i Berlins spesialkaffescene. Skjult gårdsplass. Eggs Benedict og rosemary spritz.',url:'https://fathercarpenter.com/',ig:'https://www.instagram.com/father.carpenter/'},
+{id:45,cat:'brunch',name:'Five Elephant',addr:'Reichenberger Str. 101, Kreuzberg',lat:52.4978,lng:13.4281,note:'Tredjebølge-klassiker. Like kjent for cheesecaken som for kaffen. Ingen WiFi.',url:'https://www.fiveelephant.com/',ig:'https://www.instagram.com/fiveelephant/'},
+{id:46,cat:'brunch',name:'Bonanza Coffee',addr:'Adalbertstr. 70, Kreuzberg',lat:52.4997,lng:13.4247,note:'Berlin-klassiker siden 2006. Mørk kirsebær- og sjokoladeprofil. Vakker kaffebar.',url:'https://bonanzacoffee.de/',ig:'https://www.instagram.com/bonanzacoffee/'},
+{id:47,cat:'brunch',name:'Kolo Coffee',addr:'Torstr. 177, Mitte',lat:52.5291,lng:13.4126,note:'Vant Berlin Coffee Week 2025. Grunnlagt av ukrainsk Brewers Cup-vinner.',url:'https://www.instagram.com/kolo.coffee/',ig:'https://www.instagram.com/kolo.coffee/'},
+{id:48,cat:'brunch',name:'Roamers',addr:'Pannierstr. 64, Neukölln',lat:52.4858,lng:13.4279,note:'Bohemsk interiør med planter. Sweet potato hash og kreative retter.',url:'https://www.instagram.com/roamersberlin/',ig:'https://www.instagram.com/roamersberlin/'},
+{id:49,cat:'brunch',name:'Silo Coffee',addr:'Gabriel-Max-Str. 4, F-Hain',lat:52.5092,lng:13.4558,note:'Australsk-inspirert brunch. Corn fritters og smashed avo.',url:'https://www.instagram.com/silocoffee/',ig:'https://www.instagram.com/silocoffee/'},
+{id:50,cat:'burger',name:'Goldies',addr:'Oranienstr. 6, Kreuzberg',lat:52.5004,lng:13.4162,note:'To Michelin-sjefer som startet hele Berlin-smashburger-bølgen. Tynt patty, sprø kanter.',url:'https://www.instagram.com/goldies.berlin/',ig:'https://www.instagram.com/goldies.berlin/'},
+{id:51,cat:'burger',name:'Burgermeister',addr:'Oberbaumstr. 8, Kreuzberg',lat:52.5008,lng:13.4482,note:'Ikonisk lokasjon i gammelt toalett under U-Bahn-broen.',url:'https://burger-meister.de/',ig:'https://www.instagram.com/burgermeister.berlin/'},
+{id:52,cat:'burger',name:'The Bird',addr:'Am Falkplatz 5, P-Berg',lat:52.5413,lng:13.4136,note:'Kjøttet males for hånd. Serveres på English muffin. New York-vibe.',url:'https://thebird.de/',ig:'https://www.instagram.com/thebird.berlin/'},
+{id:53,cat:'burger',name:'Kumpel & Keule',addr:'Eisenbahnstr. 42, Kreuzberg',lat:52.4966,lng:13.4364,note:'Del slakter, del burger. Dry-aged kjøtt, huslaget alt.',url:'https://www.kumpelundkeule.de/',ig:'https://www.instagram.com/kumpelundkeule/'},
+{id:8,cat:'sykkel',name:'Standert Bicycles',addr:'Friedrichstr. 23a, Kreuzberg',lat:52.5034,lng:13.3923,note:'Berlin-ikonet. Kreissäge og Pfadfinder. Tirs-fre 14-18, lørdag 11-15.',url:'https://standert.de/',ig:'https://www.instagram.com/standertbicycles/'},
+{id:9,cat:'sykkel',name:'RAD RACE SHOP',addr:'Linienstr. 217, Mitte',lat:52.5285,lng:13.4069,note:'Canyon-spesialist og gravel-fokus. Testride, verksted og group rides.',url:'https://www.rad-race.com/rad-shop-berlin',ig:'https://www.instagram.com/radrace/'},
+{id:10,cat:'sykkel',name:'Radladen.',addr:'Glasblä serallee 21-25, F-Hain',lat:52.4982,lng:13.4689,note:'Specialist-verksted, høyeste karakter i Berlin. High-end bygg. Book i god tid.',url:'https://www.instagram.com/radladen.berlin/',ig:'https://www.instagram.com/radladen.berlin/'},
+{id:11,cat:'løping',name:'Long Distance',addr:'Altonaer Str. 5-7, Tiergarten',lat:52.5168,lng:13.3436,note:'Berlins beste løpeskobutikk. Grundig analyse, ingen press.',url:'https://www.longdistance.run/',ig:'https://www.instagram.com/longdistancerun/'},
+{id:12,cat:'løping',name:'Lang and Laufladen',addr:'Augsburger Str. 27, Charlottenburg',lat:52.5014,lng:13.3349,note:'Klassisk løpebutikk med løpsanalyse ute på fortauet.',url:'https://www.instagram.com/lang.laufladen/',ig:'https://www.instagram.com/lang.laufladen/'},
+{id:13,cat:'løping',name:'Lunge Der Laufladen',addr:'Bismarckstr. 101, Charlottenburg',lat:52.5117,lng:13.3130,note:'Grundige konsultasjoner og bred merkevareportefølje. Bestill time.',url:'https://www.lunge-laufladen.de/',ig:'https://www.instagram.com/lunge.laufladen/'},
+{id:54,cat:'rute',name:'Tiergarten Loop',addr:'Start: Siegessäule, Tiergarten',lat:52.5144,lng:13.3501,note:'7 km · Park · flatt. Berlins mest ikoniske løperunde. Forbi Brandenburg Gate og Reichstag.',url:'https://www.komoot.com/highlight/2036428',ig:null},
+{id:55,cat:'rute',name:'Tempelhof Perimeter',addr:'Start: Tempelhofer Feld sør',lat:52.4730,lng:13.4030,note:'6 km · Tidligere rullebane · helt flatt. Surrealistisk og åpent. Perfekt for tempoøkt.',url:'https://www.komoot.com/highlight/2036432',ig:null},
+{id:56,cat:'rute',name:'Landwehr Canal',addr:'Start: Schlesisches Tor, Kreuzberg',lat:52.4992,lng:13.4467,note:'6-11 km · Kanaltråkk · skyggerikt. Langs kanalbredden gjennom Kreuzberg.',url:'https://www.komoot.com/highlight/2036435',ig:null},
+{id:57,cat:'rute',name:'Grunewald Skog',addr:'Start: S-Bahn Grunewald stasjon',lat:52.4832,lng:13.2358,note:'10-20 km · Skogssti · noe kupert. Rundt Grunewaldsee. Mykt underlag og frisk luft.',url:'https://www.komoot.com/highlight/2036440',ig:null},
+{id:58,cat:'rute',name:'Mauerweg - P-Berg',addr:'Start: Bornholmer Brücke',lat:52.5565,lng:13.3988,note:'8 km · Langs Murens trasé · flatt. Fra Bornholmer Brücke til Bernauer Strasse.',url:'https://www.komoot.com/highlight/2036445',ig:null},
+{id:14,cat:'design',name:'Voo Store',addr:'Oranienstr. 24, Kreuzberg',lat:52.5012,lng:13.4215,note:'Berlins cooleste concept store. Indregård, kuraterte klær og parfyme.',url:'https://vooberlin.com/',ig:'https://www.instagram.com/vooberlin/'},
+{id:15,cat:'design',name:'BAERCK',addr:'Mulackstr. 12, Mitte',lat:52.5276,lng:13.4054,note:'Liten og gjennomtenkt. Klær og møbler av høy kvalitet.',url:'https://baerck.com/',ig:'https://www.instagram.com/baerck_berlin/'},
+{id:16,cat:'design',name:'The Store X Berlin',addr:'Torstr. 1, Mitte',lat:52.5276,lng:13.4158,note:'Kuratert på alle plan. Møbler, smykker, klær og kafé.',url:'https://the-store.com/',ig:'https://www.instagram.com/thestorex/'},
+{id:17,cat:'design',name:'NOVeL',addr:'Rykestr. 48, P-Berg',lat:52.5359,lng:13.4198,note:'Bærekraftig concept store med fine merkevarer og interiørdetaljer.',url:'https://www.novel-berlin.de/',ig:'https://www.instagram.com/novel.berlin/'},
+{id:39,cat:'design',name:'Andreas Murkudis',addr:'Potsdamer Str. 81, Schöneberg',lat:52.5019,lng:13.3655,note:'Berlins viktigste concept store. 1000 kvm i tidligere trykkeri. Galeri-estetikk.',url:'https://andreasmurkudis.net/',ig:'https://www.instagram.com/andreasmurkudis/'},
+{id:19,cat:'bar',name:'Eingang Zwei',addr:'Mehringdamm 57, Kreuzberg',lat:52.4912,lng:13.3873,note:'Fenomenale cocktails. Sjekk gin basil smash og espresso martini.',url:'https://www.instagram.com/eingang_zwei/',ig:'https://www.instagram.com/eingang_zwei/'},
+{id:20,cat:'bar',name:'LIMONADIER',addr:'Nostitzstr. 12, Kreuzberg',lat:52.4918,lng:13.3905,note:'Smakhjul-meny for å velge cocktail. Bergmannkiez-perle.',url:'https://www.limonadier.de/',ig:'https://www.instagram.com/limonadier.bar/'},
+{id:21,cat:'bar',name:'Galander Kreuzberg',addr:'Grossbeerenstr. 54, Kreuzberg',lat:52.4919,lng:13.3832,note:'Klassiske cocktails med Galander-twist. Popcorn og vann til bords.',url:'https://www.instagram.com/galander.kreuzberg/',ig:'https://www.instagram.com/galander.kreuzberg/'},
+{id:22,cat:'bar',name:'Zyankali Bar',addr:'Gneisenaustr. 17, Kreuzberg',lat:52.4916,lng:13.3929,note:'Kjemilaboratorium-estetikk og surrealistisk humor. Berlin på sitt merkeligste.',url:'https://zyankalibar.com/',ig:'https://www.instagram.com/zyankalibar/'},
+{id:23,cat:'bar',name:'Lerchen & Eulen',addr:'Pücklerstr. 33, Kreuzberg',lat:52.5021,lng:13.4308,note:'Stue-atmosfære, blomster og stearinlys. Rimelig. Åpent til 05:30 i helgene.',url:'https://www.instagram.com/lerchenundeulen/',ig:'https://www.instagram.com/lerchenundeulen/'},
+{id:24,cat:'bar',name:'Bar39',addr:'Oranienstr. 39, Kreuzberg',lat:52.5020,lng:13.4172,note:'Solid bar med gode klassikere og avslappet vibe. Ingen kortbetaling.',url:'https://www.instagram.com/bar39berlin/',ig:'https://www.instagram.com/bar39berlin/'},
+{id:25,cat:'bar',name:'ZU SPÄTI!?',addr:'Oranienstr. 189, Kreuzberg',lat:52.5004,lng:13.4220,note:'Halvt späti, halvt bar. 5 euro cocktails og chill vibe.',url:'https://www.instagram.com/zuspaeti.bar/',ig:'https://www.instagram.com/zuspaeti.bar/'},
+{id:40,cat:'bar',name:'ORA Wine Bar',addr:'Oranienplatz 14, Kreuzberg',lat:52.5014,lng:13.4159,note:'Gammelt apotek omgjort til vinbar. Et av Berlins vakreste interiører.',url:'https://www.ora.berlin/',ig:'https://www.instagram.com/ora.berlin/'},
+{id:41,cat:'bar',name:'CODA Dessert Bar',addr:'Friedelstr. 47, Neukölln',lat:52.4900,lng:13.4275,note:'To Michelin-stjerner. Dessertbasert tasting-meny med cocktail-pairing. Book langt frem.',url:'https://coda-berlin.com/',ig:'https://www.instagram.com/coda.berlin/'},
+{id:26,cat:'kneipe',name:'Dicke Wirtin',addr:'Carmerstr. 9, Charlottenburg',lat:52.5065,lng:13.3236,note:'Klassisk Berlin-kneipe med fantastisk schnitzel. Vittig personale. Book bord.',url:'https://www.dicke-wirtin.de/',ig:'https://www.instagram.com/dickewirtin/'},
+{id:27,cat:'kneipe',name:'Zur Gerichtslaube',addr:'Poststr. 28, Mitte',lat:52.5171,lng:13.4063,note:'Ekte berliner-mat i sentrum. Kalbsbäckchen og goulash på toppnivå.',url:'https://www.gerichtslaube.de/',ig:'https://www.instagram.com/zurgerichtslaube/'},
+{id:28,cat:'kneipe',name:'Nante-Eck',addr:'Unter den Linden 35, Mitte',lat:52.5167,lng:13.3883,note:'Favorittrestaurant for mange returbesøkende. Hjertelig service og perfekt steak.',url:'https://www.nanteeck.de/',ig:'https://www.instagram.com/nanteeck/'},
+{id:29,cat:'kneipe',name:'Treffpunkt Berlin',addr:'Mittelstr. 55, Mitte',lat:52.5179,lng:13.3885,note:'Klassisk gastropub. Currywurst, schnitzel og godt øl.',url:'https://www.instagram.com/treffpunktberlin/',ig:'https://www.instagram.com/treffpunktberlin/'},
+{id:30,cat:'club',name:'Berghain',addr:'Am Wriezener Bhf, F-Hain',lat:52.5111,lng:13.4430,note:'Trenger ingen introduksjon. Techno-katedralens mor. Ikke stor gruppe.',url:'https://berghain.berlin/',ig:'https://www.instagram.com/berghain/'},
+{id:31,cat:'club',name:'Sisyphos',addr:'Hauptstr. 15, Lichtenberg',lat:52.4932,lng:13.4919,note:'Festival-club med uteområde og ulike rom. Mer tilgjengelig enn Berghain. 25 euro.',url:'https://sisyphos-berlin.net/',ig:'https://www.instagram.com/sisyphosberlin/'},
+{id:32,cat:'club',name:'://about blank',addr:'Markgrafendamm 24c, F-Hain',lat:52.5025,lng:13.4664,note:'Rå og politisk club med nydelig hage. Queer-inkluderende.',url:'https://aboutblank.club/',ig:'https://www.instagram.com/aboutblank.berlin/'},
+];
+var ROUTES=[
+{id:'r1',startId:54,dist:'7 km',terrain:'Park · grus og asfalt',path:[[52.5144,13.3501],[52.5155,13.3467],[52.5172,13.3442],[52.5196,13.3429],[52.5215,13.3452],[52.5222,13.3498],[52.5218,13.3540],[52.5206,13.3567],[52.5193,13.3596],[52.5175,13.3620],[52.5163,13.3640],[52.5156,13.3668],[52.5160,13.3700],[52.5170,13.3728],[52.5180,13.3750],[52.5170,13.3770],[52.5155,13.3778],[52.5140,13.3765],[52.5128,13.3745],[52.5120,13.3720],[52.5115,13.3690],[52.5110,13.3655],[52.5112,13.3620],[52.5118,13.3590],[52.5125,13.3560],[52.5130,13.3530],[52.5135,13.3510],[52.5144,13.3501]]},
+{id:'r2',startId:55,dist:'6 km',terrain:'Rullebane · helt flatt',path:[[52.4730,13.4030],[52.4742,13.4080],[52.4755,13.4130],[52.4768,13.4180],[52.4778,13.4230],[52.4782,13.4280],[52.4778,13.4330],[52.4768,13.4370],[52.4752,13.4390],[52.4733,13.4395],[52.4712,13.4385],[52.4695,13.4360],[52.4685,13.4325],[52.4680,13.4285],[52.4682,13.4240],[52.4688,13.4195],[52.4695,13.4150],[52.4702,13.4105],[52.4710,13.4068],[52.4720,13.4047],[52.4730,13.4030]]},
+{id:'r3',startId:56,dist:'6-11 km',terrain:'Kanaltråkk · flatt',path:[[52.4992,13.4467],[52.4985,13.4430],[52.4978,13.4395],[52.4968,13.4358],[52.4956,13.4320],[52.4944,13.4283],[52.4932,13.4248],[52.4922,13.4215],[52.4915,13.4185],[52.4910,13.4155],[52.4908,13.4120],[52.4908,13.4082],[52.4910,13.4043],[52.4914,13.4005],[52.4920,13.3968],[52.4928,13.3930],[52.4938,13.3892],[52.4950,13.3855],[52.4963,13.3820],[52.4978,13.3788],[52.4995,13.3758],[52.5010,13.3728],[52.5022,13.3698],[52.5030,13.3665]]},
+{id:'r4',startId:57,dist:'10-20 km',terrain:'Skogssti · noe kupert',path:[[52.4832,13.2358],[52.4845,13.2320],[52.4862,13.2290],[52.4882,13.2268],[52.4905,13.2255],[52.4928,13.2255],[52.4948,13.2268],[52.4962,13.2290],[52.4970,13.2318],[52.4968,13.2348],[52.4955,13.2372],[52.4938,13.2388],[52.4918,13.2395],[52.4898,13.2390],[52.4880,13.2378],[52.4868,13.2360],[52.4858,13.2338],[52.4850,13.2315],[52.4840,13.2295],[52.4832,13.2358]]},
+{id:'r5',startId:58,dist:'8 km',terrain:'Asfalt og sti · flatt',path:[[52.5565,13.3988],[52.5548,13.3975],[52.5530,13.3960],[52.5512,13.3945],[52.5495,13.3930],[52.5478,13.3918],[52.5460,13.3908],[52.5442,13.3900],[52.5425,13.3892],[52.5408,13.3882],[52.5392,13.3870],[52.5378,13.3858],[52.5365,13.3845],[52.5352,13.3832],[52.5340,13.3820],[52.5328,13.3808]]},
+];
+var map,lMarkers={},lRoutes={},uMarker;
+var active={},selId=null,uLat=null,uLng=null,sbOpen=false,nearbyMode=false;
+Object.keys(CATS).forEach(function(k){active[k]=true;});
+function h2r(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+a+')';}
+window.addEventListener('load',function(){
+  map=L.map('map',{center:[52.505,13.405],zoom:13});
+  // OpenFreeMap Positron — free, no key, shows buildings in gray, streets in warm tones
+  L.tileLayer('https://tiles.openfreemap.org/styles/positron/{z}/{x}/{y}.png',{
+    attribution:'© <a href="https://openfreemap.org">OpenFreeMap</a> © <a href="https://openstreetmap.org/copyright">OSM</a>',
+    maxZoom:20
+  }).addTo(map);
+  map.on('click',function(){if(selId!==null)deselect();});
+  buildFilters();refresh();buildList();
+});
+function mkIcon(cat,isSel){
+  var c=CATS[cat];
+  // Full solid color, white border for contrast against any map background
+  var ring=isSel?'box-shadow:0 0 0 3px #1E3EFF,0 0 0 5px #F7F4EF,0 2px 12px rgba(0,0,0,.5);':'box-shadow:0 0 0 2px rgba(255,255,255,0.9),0 2px 8px rgba(0,0,0,.4);';
+  var textColor=(cat==='club')?'#F7F4EF':'#0d0d0d';
+  var html='<div class="mk'+(isSel?' sel':'')+'"><div class="mk-b" style="background:'+c.color+';border:none;'+ring+'"><span style="font-size:14px;line-height:1;filter:none">'+c.emoji+'</span></div><div class="mk-tip" style="border-top:5px solid '+c.color+'"></div></div>';
+  return L.divIcon({className:'',html:html,iconSize:[30,37],iconAnchor:[15,37],popupAnchor:[0,-40]});
+}
+function refresh(){
+  Object.values(lMarkers).forEach(function(m){map.removeLayer(m);});
+  Object.values(lRoutes).forEach(function(r){map.removeLayer(r.line);map.removeLayer(r.glow);});
+  lMarkers={};lRoutes={};
+  if(active['rute']){
+    ROUTES.forEach(function(r){
+      var isSel=selId===r.startId;
+      var glow=L.polyline(r.path,{color:'#1E3EFF',weight:isSel?18:10,opacity:isSel?0.2:0.08,lineCap:'round'}).addTo(map);
+      var line=L.polyline(r.path,{color:'#1E3EFF',weight:isSel?4:2.5,opacity:isSel?1:0.75,dashArray:isSel?null:'10 6',lineCap:'round'}).addTo(map);
+      (function(sid){line.on('click',function(e){L.DomEvent.stopPropagation(e);select(sid);});glow.on('click',function(e){L.DomEvent.stopPropagation(e);select(sid);});})(r.startId);
+      lRoutes[r.id]={line:line,glow:glow};
+    });
+  }
+  P.forEach(function(p){
+    if(!active[p.cat])return;
+    var isSel=selId===p.id;
+    var m=L.marker([p.lat,p.lng],{icon:mkIcon(p.cat,isSel),zIndexOffset:isSel?1000:0}).addTo(map);
+    (function(pl){m.on('click',function(e){L.DomEvent.stopPropagation(e);select(pl.id);});})(p);
+    lMarkers[p.id]=m;
+  });
+}
+function popHtml(p){
+  var c=CATS[p.cat],r=ROUTES.find(function(x){return x.startId===p.id;});
+  var links='';
+  if(p.url&&p.url!==p.ig)links+='<a href="'+p.url+'" target="_blank" rel="noopener">'+(r?'Komoot ↗':'Nettside ↗')+'</a>';
+  if(p.ig)links+='<a href="'+p.ig+'" target="_blank" rel="noopener">Instagram ↗</a>';
+  links+='<a href="https://maps.google.com/?q='+encodeURIComponent(p.name+' Berlin')+'" target="_blank" rel="noopener">Maps ↗</a>';
+  return '<div class="pop-inner"><div class="pop-cat"><span style="color:'+c.color+'">'+c.emoji+' '+c.label+'</span></div><div class="pop-name">'+p.name+'</div><div class="pop-addr">'+p.addr+'</div>'+(r?'<div class="pop-meta">'+r.dist+' · '+r.terrain+'</div>':'')+'<div class="pop-note">'+p.note+'</div><div class="pop-links">'+links+'</div></div>';
+}
+function select(id){
+  if(selId===id){deselect();return;}
+  if(selId!==null&&lMarkers[selId])lMarkers[selId].closePopup();
+  selId=id;refresh();
+  var p=P.find(function(x){return x.id===id;});
+  if(p){map.flyTo([p.lat,p.lng],Math.max(map.getZoom(),15),{duration:0.6});}
+  if(lMarkers[id])lMarkers[id].bindPopup(popHtml(p),{maxWidth:260,minWidth:240,autoClose:false,closeOnClick:false}).openPopup();
+  buildList();
+  var li=document.getElementById('li'+id);if(li)li.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function deselect(){
+  if(selId!==null&&lMarkers[selId])lMarkers[selId].closePopup();
+  selId=null;refresh();buildList();
+}
+function buildFilters(){
+  var el=document.getElementById('fbar');el.innerHTML='';
+  var allOn=Object.keys(CATS).every(function(k){return active[k];});
+  var ab=mkFb('Alle','#888',allOn);
+  ab.onclick=function(){Object.keys(CATS).forEach(function(k){active[k]=!allOn;});buildFilters();refresh();buildList();};
+  el.appendChild(ab);
+  Object.keys(CATS).forEach(function(k){
+    var c=CATS[k],b=mkFb(c.emoji+' '+c.label,c.color,active[k]);
+    b.onclick=function(){active[k]=!active[k];buildFilters();refresh();buildList();};
+    el.appendChild(b);
+  });
+}
+function mkFb(label,color,on){var b=document.createElement('button');b.className='fb'+(on?' on':'');b.innerHTML='<span class="dot" style="background:'+color+'"></span>'+label;return b;}
+function buildList(){
+  var list=document.getElementById('sbl');
+  var vis=P.filter(function(p){return active[p.cat];});
+  if(nearbyMode&&uLat!==null)vis.sort(function(a,b){return gdist(uLat,uLng,a.lat,a.lng)-gdist(uLat,uLng,b.lat,b.lng);});
+  document.getElementById('sbn').textContent=(nearbyMode&&uLat!==null)?'Nærmeste først':vis.length+' steder';
+  list.innerHTML='';
+  vis.forEach(function(p){
+    var c=CATS[p.cat],r=ROUTES.find(function(x){return x.startId===p.id;});
+    var distVal=uLat!==null?fmtD(gdist(uLat,uLng,p.lat,p.lng)):'';
+    var d=document.createElement('div');d.className='pi'+(selId===p.id?' sel':'');d.id='li'+p.id;
+    var bar=document.createElement('div');bar.className='pi-bar';bar.style.background=c.color;d.appendChild(bar);
+    var body=document.createElement('div');body.className='pi-body';
+    var nm=document.createElement('div');nm.className='pi-name';nm.textContent=p.name;body.appendChild(nm);
+    var ct=document.createElement('div');ct.className='pi-cat';ct.style.color=c.color;ct.textContent=c.emoji+' '+c.label;body.appendChild(ct);
+    if(r){var me=document.createElement('div');me.className='pi-cat';me.style.color='#1E3EFF';me.textContent=r.dist+' · '+r.terrain;body.appendChild(me);}
+    var ad=document.createElement('div');ad.className='pi-addr';ad.textContent=p.addr;body.appendChild(ad);
+    var no=document.createElement('div');no.className='pi-note';no.textContent=p.note;body.appendChild(no);
+    var lw=document.createElement('div');lw.className='pi-links';
+    function mkA(href,lbl){var a=document.createElement('a');a.href=href;a.textContent=lbl;a.target='_blank';a.rel='noopener';a.addEventListener('click',function(e){e.stopPropagation();});lw.appendChild(a);}
+    if(p.url&&p.url!==p.ig)mkA(p.url,r?'Komoot ↗':'Nettside ↗');
+    if(p.ig)mkA(p.ig,'Instagram ↗');
+    mkA('https://maps.google.com/?q='+encodeURIComponent(p.name+' Berlin'),'Maps ↗');
+    body.appendChild(lw);d.appendChild(body);
+    if(distVal){var dv=document.createElement('div');dv.className='pi-dist'+(nearbyMode?' big':'');dv.textContent=distVal;d.appendChild(dv);}
+    d.addEventListener('click',function(){select(p.id);});
+    list.appendChild(d);
+  });
+}
+function locateMe(){
+  var btn=document.getElementById('locBtn');
+  if(!navigator.geolocation){alert('Geolokasjon ikke tilgjengelig');return;}
+  btn.textContent='Lokaliserer…';
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      uLat=pos.coords.latitude;uLng=pos.coords.longitude;
+      if(uMarker)map.removeLayer(uMarker);
+      uMarker=L.circleMarker([uLat,uLng],{radius:7,color:'#1E3EFF',fillColor:'#c8ff00',fillOpacity:1,weight:3,opacity:0.35}).addTo(map);
+      map.flyTo([uLat,uLng],14,{duration:1});
+      btn.textContent='◉ Fant deg';btn.classList.add('ok');buildList();
+    },
+    function(err){var m={1:'Tilgang nektet',2:'Utilgjengelig',3:'Tidsavbrudd'};alert(m[err.code]||'Feil');btn.textContent='◎ Finn meg';},
+    {enableHighAccuracy:true,timeout:10000,maximumAge:0}
+  );
+}
+function toggleNearby(){if(uLat===null){locateMe();return;}nearbyMode=!nearbyMode;document.getElementById('nearbyBtn').classList.toggle('ok',nearbyMode);buildList();}
+function toggleSb(){sbOpen=!sbOpen;document.getElementById('sb').classList.toggle('open',sbOpen);document.getElementById('tog').textContent=sbOpen?'✕ Lukk':'☰ Liste';}
+function gdist(la1,lo1,la2,lo2){var R=6371000,r=Math.PI/180,a=Math.sin((la2-la1)*r/2)*Math.sin((la2-la1)*r/2)+Math.cos(la1*r)*Math.cos(la2*r)*Math.sin((lo2-lo1)*r/2)*Math.sin((lo2-lo1)*r/2);return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+function fmtD(m){return m<1000?Math.round(m)+'m':(m/1000).toFixed(1)+'km';}
+</script>
+</body>
+</html>
